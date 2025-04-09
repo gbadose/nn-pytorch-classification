@@ -1,3 +1,4 @@
+# Importing required libraries and modules
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -13,23 +14,40 @@ from torchvision.datasets import ImageFolder
 from PIL import ImageFile
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
+
+# Set up the logger to display messages on the console at DEBUG level
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 logger.addHandler(logging.StreamHandler())
 
 
 def test(model, test_loader, criterion, device, epoch_no):
-    
+    """
+    Evaluate the model on the test dataset.
+    Args:
+        model: The trained model to be tested.
+        test_loader: DataLoader providing batches from the test dataset.
+        criterion: Loss function (e.g., cross entropy loss).
+        device: Device to run the model on (CPU).
+        epoch_no: The current epoch number for logging purposes.
+    """
     logger.info(f"Epoch: {epoch_no} - Testing Model on Complete Testing Dataset")
+    # Set the model for evaluation 
     model.eval()
     running_loss = 0
     running_corrects = 0
+
+    # No gradient calculation needed during evaluation for performance gain
     with torch.no_grad():
         for inputs, labels in test_loader:
+            # Move inputs to specified device
             inputs = inputs.to(device)
             labels = labels.to(device)
+            # Perform forward pass through the model to get predictions
             outputs = model(inputs)
+            # Compute the loss using the specified criterion
             loss = criterion(outputs, labels)
+            # Get predicted class by selecting the index with the maximum score
             pred = outputs.argmax(dim=1, keepdim=True)
             running_loss += loss.item() * inputs.size(0) #Calculating the running loss
             running_corrects += pred.eq(labels.view_as(pred)).sum().item() #Calculating running corrects
@@ -42,6 +60,19 @@ def test(model, test_loader, criterion, device, epoch_no):
 
 
 def train(model, train_loader, criterion, optimizer, device, epoch_no):
+    """
+    Train the model for one epoch on the training dataset.
+    Args:
+      model: The model to be trained.
+      train_loader: DataLoader providing batches from the training dataset.
+      criterion: Loss function (e.g., cross entropy loss).
+      optimizer: Optimization algorithm (e.g., AdamW).
+      device: Device to run the model on (CPU).
+      epoch_no: The current epoch number for logging purposes.
+      
+    Returns:
+      The updated model after training for one epoch.
+    """
     logger.info(f"Epoch: {epoch_no} - Training Model on Complete Training Dataset")
     model.train()
     running_loss = 0
@@ -78,6 +109,12 @@ def train(model, train_loader, criterion, optimizer, device, epoch_no):
 
 
 def net():
+
+    """
+    Create and modify the pre-trained ResNet50 model for the specific task.
+    Returns:
+      A modified ResNet50 model with its final layer replaced to suit 133-class classification.
+    """
     weights = models.ResNet50_Weights.DEFAULT
     model = models.resnet50(weights=weights)
     for param in model.parameters():
@@ -91,6 +128,14 @@ def net():
 
 
 def create_data_loaders(batch_size, data):
+    """
+    Create and return data loaders for training and testing datasets.
+    Args:
+        batch_size: Size of each batch.
+        data: Root directory containing the data organized into 'train' and 'test' folders.
+    Returns:
+      A tuple of (train_loader, test_loader).
+    """
 
     transform = transforms.Compose([
         transforms.Resize(256),
@@ -108,6 +153,11 @@ def create_data_loaders(batch_size, data):
 
 
 def main(args):
+    """
+    Main function to set up device, model, data loaders, loss, optimizer, and execute training and testing loops.
+    Args:
+      args: Parsed command-line arguments.
+    """
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     logger.info(f"Running on Device {device}")
 

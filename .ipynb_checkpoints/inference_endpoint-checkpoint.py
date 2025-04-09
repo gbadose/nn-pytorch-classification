@@ -1,5 +1,5 @@
 """
-dog_breed_inference.py  –  Optimized inference script
+inference_endpoint.py  –  Optimized inference script
 -----------------------------------------------------
 -  single global logger & device
 -  transforms built once (not every request)
@@ -20,9 +20,7 @@ import torchvision.models as models
 import torchvision.transforms as T
 from PIL import Image
 
-# --------------------------------------------------------------------------- #
-#  GLOBALS
-# --------------------------------------------------------------------------- #
+
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
 LOGGER.addHandler(logging.StreamHandler(sys.stdout))
@@ -39,9 +37,7 @@ TEST_TRANSFORM = T.Compose([
     T.ToTensor(),
 ])
 
-# --------------------------------------------------------------------------- #
-#  MODEL DEFINITION
-# --------------------------------------------------------------------------- #
+# Modele Definition
 def build_model() -> nn.Module:
     """Return a frozen ResNet‑50 with two custom FC layers (133‑class output)."""
     model = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
@@ -57,9 +53,7 @@ def build_model() -> nn.Module:
     return model
 
 
-# --------------------------------------------------------------------------- #
-#  SAGEMAKER HOOKS
-# --------------------------------------------------------------------------- #
+# Sagemaker Hooks
 def model_fn(model_dir: str) -> nn.Module:
     """Load the model once at container start‑up."""
     LOGGER.info("Loading model from %s on %s", model_dir, DEVICE)
